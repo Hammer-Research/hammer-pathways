@@ -44,10 +44,47 @@ Select the gene universe before ranking. Ranking a larger matrix and then droppi
 
 Compose these functions with your own data loading, sklearn estimator or reporting code. NumPy and SciPy are the only runtime dependencies. Freeze the gene order, memberships, input hashes, package version and environment with each experiment. No application framework or plugin protocol is required.
 
-Version 0.1.0 is an initial API. Numerical changes must be documented and regression-tested; minor versions may change the API before 1.0. Historical artifacts retain their original provenance.
+Version 0.2.0 is an initial API. Numerical changes must be documented and regression-tested; minor versions may change the API before 1.0. Historical artifacts retain their original provenance.
 
 ## Contribute
 
 Useful contributions include a reproducible numerical bug, a missing input boundary check, or an independently reproduced example. Include the smallest synthetic input, expected output with its mathematical basis, actual output and dependency versions. Run the tests and explain numerical changes. No patient data are needed.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for local setup and review expectations. This package is MIT-licensed; see LICENSE. The license applies to this package's code and documentation, not to model weights, third-party gene sets or the parent repository. Source data remain subject to their own terms.
+
+## Optional scikit-learn integration
+
+Install `.[sklearn]` from the source directory, or install the release wheel
+followed by `hammer-pathways[sklearn]==0.2.0` in the same environment.
+The base package still imports only NumPy and SciPy.
+
+```python
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LogisticRegression
+from hammer_pathways.sklearn import MeanRankTransformer
+
+pipeline = Pipeline([
+    ('pathways', MeanRankTransformer(
+        gene_ids=['a', 'b', 'c'],
+        memberships=[[0, 1], [1, 2]],
+        feature_names=['first_set', 'second_set'],
+    )),
+    ('classifier', LogisticRegression()),
+])
+```
+
+`fit` validates and freezes the supplied definition; it learns no cohort statistics
+and ignores labels. The transformer supports sklearn cloning, cross-validation,
+`get_feature_names_out` and pandas output through `set_output`. See
+`examples/pipeline.py` for a complete synthetic run.
+
+Named DataFrame columns must exactly match the declared gene order. A named fit
+requires named transform inputs. NumPy arrays have no column identifiers: their
+order is the caller's responsibility. No automatic reordering occurs. Mutating
+memberships or constructor parameters after fitting requires refitting. A failed
+refit invalidates the prior fit.
+
+A pipeline does not make outcome-informed gene-set selection safe. Choose gene
+sets without held-out outcomes or select them strictly inside training folds;
+use appropriate patient/study grouping for your evaluation. This example does
+not choose a research validation design.

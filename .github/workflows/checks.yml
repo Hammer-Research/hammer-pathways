@@ -25,3 +25,8 @@ jobs:
       - run: python examples/minimal.py
       - name: Check standalone imports
         run: python -c "import sys; import hammer_pathways; assert not any(m in sys.modules for m in ('gene_rank', 'ingest', 'sklearn', 'torch', 'pandas'))"
+      - name: Install and test optional sklearn integration
+        run: |
+          python -m pip install 'hammer-pathways[sklearn,test]==0.2.0'
+          python -m pytest tests -q
+          python examples/pipeline.py
